@@ -3,66 +3,63 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Http\Controllers\ResponseController; 
+use App\Http\Controllers\ResponseController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Foundation\Auth\AuthenticatesUsers;
-use Carbon\Carbon;
-use Validator;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 use App\Models\User;
-// use App\Models\Role;
 
 class RegisterController extends ResponseController
 {
-  /**
-   * Create user account.
-   * Authenticate user
-   * @return \Illuminate\Http\Response
-   */
-  public function register(Request $request) 
-  {
-    $user = new User;
-    // validate the data
-    $validator = Validator::make($request->all(), [
-      'name' => 'required',
-      // 'username' => 'required|unique:users',
-      'email' => 'required|email|unique:users',
-      'password' => 'required|min:6',
-    ]);
+    /**
+     * Create user account.
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function register(Request $request)
+    {
+        // Validate the data
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:6|confirmed',  // password confirmation validation
+            'phone' => 'nullable|string|max:15', // Optional phone field
+        ]);
 
-    if ($validator->fails()){
-        return $this->formatJson($validator->errors()->first(), "Bad Request", 400);
+        // If validation fails
+        if ($validator->fails()) {
+            return $this->formatJson($validator->errors()->first(), "Bad Request", 400);
+        }
+
+        // Check if email already exists in the database
+        if (User::where('email', $request->email)->exists()) {
+            return $this->formatJson("This email address exists. Please login or reset your password.", "FAILURE", 409);
+        }
+
+        // Create a new user
+        $user = new User;
+        $user->name = $request->name;
+        $user->email = $request->email;
+        $user->password = Hash::make($request->password); // Encrypt password
+
+        // Optional: Add phone number if present
+        if ($request->has('phone') && !empty($request->phone)) {
+            $user->phone = $request->phone;
+        }
+
+        // Save the user
+        if ($user->save()) {
+            // Generate API token (if using Passport or Sanctum, otherwise use the access key)
+            $token = $user->createToken('YourAppName')->accessToken;
+
+            // Return the response with the generated token
+            return $this->formatJson("Registration successful", "SUCCESS", 201, [
+                'user' => $user,
+                'token' => $token,
+            ]);
+        } else {
+            return $this->formatJson("An error occurred and your account was not created. Please try again.", "FAILURE", 406);
+        }
     }
-
-    if ($request){
-      // check if email exist
-      if (User::where('email', $request->email)->exists()){
-        return $this->formatJson("This email address exist. Instead, login or reset your password", "FAILURE", 409);
-      }
-
-      $user->name = $request->name;
-      $user->email = $request->email;
-      $user->password = \Hash::make($request->password);
-
-      if (isset($request->phone) && !empty($request->phone)) {
-        $user->phone = $request->phone;
-      }
-
-      // generate a unique access key
-      $user->access_key = Str::random(32);
-
-      if ($user->save()) {
-        $response['apikey'] = $user->access_key;
-
-        return $this->formatJson("Successful registration", "SUCCESS", 201, $response);
-      } else {
-        $response['hasErrors'] = $user->hasErrors();
-        $response['errors'] = $user->getErrors();
-        return $this->formatJson("An error occured and your account was not created. Please try again", "FAILURE", 406, $response);
-      }
-    }
-  }
-
 }
