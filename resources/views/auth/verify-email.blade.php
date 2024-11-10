@@ -34,6 +34,6 @@
                     {{ __('Log Out') }}
                 </button>
             </form>
-        </div>
+        </div>  
     </x-auth-card>
 </x-guest-layout>

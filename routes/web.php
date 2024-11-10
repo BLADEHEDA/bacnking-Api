@@ -52,6 +52,16 @@ Route::get('/reset-password/{token}', [NewPasswordController::class, 'create'])
 
 Route::post('/reset-password', [NewPasswordController::class, 'store'])
      ->name('password.update');
+
+
+
+Route::get('/logout', function () {
+        return view('logout'); // replace with the view you want to show on the dashboard
+    })->name('logout');
+
+Route::get('/dashboard', function () {
+    return view('dashboard'); // replace with the view you want to show on the dashboard
+})->name('dashboard');
 // end of changes 
 
 Route::get('/documentation', function () {
