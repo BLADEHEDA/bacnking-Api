@@ -6,3 +6,5 @@ stop apache : sudo systemctl stop apache2
 check the status of xammp servers : sudo /opt/lampp/lampp status
 
 To resolve the error of phpmyadmin not loading , you need to stop the default apache2 using the command 'sudo systemctl stop apache2', then start the xammp servers on the GUI and configure the port to port 80 and that will work work fine 
+
+When face with pubic key or private key issues genetated by passport for laravel , you need to install the page , the copy the absolute paths of the keys and reference in env 

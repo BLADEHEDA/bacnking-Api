@@ -20,7 +20,9 @@ use App\Http\Controllers\CustomerController;
 
 // Registration & Authentication
 Route::post('/register', [RegisterController::class, 'register']);
-Route::post('/login', [LoginController::class, 'login'])->middleware('APIkey');
+// Route::post('/login', [LoginController::class, 'login'])->middleware('APIkey');
+Route::post('/login', [LoginController::class, 'login']);
+
 
 Route::group([
     // 'prefix' => '/banking/',
